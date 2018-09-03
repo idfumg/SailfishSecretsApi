@@ -1,0 +1,6 @@
+*.o
+RPMS
+Makefile
+connman-iptables
+documentation.list
+**/*.so*
