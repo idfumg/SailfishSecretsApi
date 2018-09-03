@@ -18,8 +18,10 @@ public:
     bool deleteCollection() const;
     bool createCollection() const;
     Sailfish::Crypto::Key createTemplateKey() const;
+    Sailfish::Crypto::Key createTemplateKeyGOST() const;
     Sailfish::Crypto::Key createStoredKey(const Sailfish::Crypto::Key& keyTemplate) const;
     QByteArray createIV(const Sailfish::Crypto::Key& key) const;
+    QByteArray createIVForAuth(const Sailfish::Crypto::Key& key) const;
     QByteArray encrypt(const Sailfish::Crypto::Key& key,
                        const QByteArray& iv,
                        const QByteArray& plainText) const;
@@ -37,5 +39,18 @@ public:
                             const QByteArray& ciphertext) const;
     QByteArray sign(const Sailfish::Crypto::Key& key,
                     const QByteArray& data) const;
+    bool verify(const Sailfish::Crypto::Key& key,
+                const QByteArray& data,
+                const QByteArray& signature) const;
     Sailfish::Crypto::Key createStoredKeyRSA() const;
+    QByteArray encryptWithAuth(const Sailfish::Crypto::Key& key,
+                               const QByteArray& iv,
+                               const QByteArray& plainText,
+                               const QByteArray& authCode,
+                               QByteArray& authTag) const;
+    QByteArray decryptWithAuth(const Sailfish::Crypto::Key& key,
+                               const QByteArray& iv,
+                               const QByteArray& cipherText,
+                               const QByteArray& authCode,
+                               const QByteArray& authTag) const;
 };
