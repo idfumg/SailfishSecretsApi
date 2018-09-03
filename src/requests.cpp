@@ -446,6 +446,8 @@ QByteArray Requests::decipherText(const Sailfish::Crypto::Key& key,
 QByteArray Requests::sign(const Sailfish::Crypto::Key& key,
                           const QByteArray& data) const
 {
+    qDebug() << Q_FUNC_INFO;
+
     CryptoManager manager;
     SignRequest request;
     request.setManager(&manager);
@@ -462,4 +464,49 @@ QByteArray Requests::sign(const Sailfish::Crypto::Key& key,
     }
 
     return request.signature();
+}
+
+Sailfish::Crypto::Key Requests::createStoredKeyRSA() const
+{
+    qDebug() << Q_FUNC_INFO;
+
+    Key keyTemplate;
+
+    keyTemplate.setAlgorithm(CryptoManager::AlgorithmRsa);
+    keyTemplate.setSize(256);
+    keyTemplate.setOrigin(Key::OriginDevice);
+    keyTemplate.setOperations(
+        CryptoManager::OperationEncrypt |
+        CryptoManager::OperationDecrypt |
+        CryptoManager::OperationSign |
+        CryptoManager::OperationVerify);
+    keyTemplate.setIdentifier(keyIdentifier);
+    keyTemplate.setComponentConstraints(
+        Sailfish::Crypto::Key::MetaData |
+        Sailfish::Crypto::Key::PublicKeyData |
+        Sailfish::Crypto::Key::PrivateKeyData);
+
+    KeyDerivationParameters kdp;
+    kdp.setKeyDerivationFunction(CryptoManager::KdfPkcs5Pbkdf2);
+    kdp.setKeyDerivationMac(CryptoManager::MacHmac);
+    kdp.setKeyDerivationDigestFunction(CryptoManager::DigestSha512);
+    kdp.setIterations(16384);
+    kdp.setSalt(QByteArray("some random salt"));
+    kdp.setOutputKeySize(256);
+
+    CryptoManager manager;
+    GenerateStoredKeyRequest request;
+    request.setManager(&manager);
+    request.setKeyTemplate(keyTemplate);
+    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
+    request.setKeyDerivationParameters(kdp);
+    request.startRequest();
+    request.waitForFinished();
+
+    if (not IsRequestWasSuccessful(&request)) {
+        qDebug() << "Error when generating key";
+        throw std::runtime_error("Error when generating key");
+    }
+
+    return request.generatedKeyReference();
 }

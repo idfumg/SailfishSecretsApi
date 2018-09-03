@@ -29,7 +29,15 @@ namespace {
         Q_ASSERT(cipherText == encryptedText);
         Q_ASSERT(plainText == decipheredText);
 
-        const QByteArray signed_ = requests.sign(key, plainText);
+        if (not requests.deleteStoredKey()) {
+            qDebug() << "Cannot delete stored key";
+        }
+        else {
+            qDebug() << "Stored key was removed";
+        }
+
+        const auto rsaKey = requests.createStoredKeyRSA();
+        const QByteArray signed_ = requests.sign(rsaKey, plainText);
 
         // you can read key from db if it was stored
         // how its working - is super secret!
@@ -59,13 +67,6 @@ namespace {
             const auto iv = requests.createIV(key);
 
             TryToEncryptDecrypt(requests, key, iv, plainText);
-
-            if (not requests.deleteStoredKey()) {
-                qDebug() << "Cannot delete stored key";
-            }
-            else {
-                qDebug() << "Stored key was removed";
-            }
         }
     }
 

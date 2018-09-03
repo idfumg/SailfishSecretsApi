@@ -37,4 +37,5 @@ public:
                             const QByteArray& ciphertext) const;
     QByteArray sign(const Sailfish::Crypto::Key& key,
                     const QByteArray& data) const;
+    Sailfish::Crypto::Key createStoredKeyRSA() const;
 };
