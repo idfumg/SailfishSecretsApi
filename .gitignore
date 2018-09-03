@@ -1,6 +1,6 @@
 *.o
 RPMS
 Makefile
-connman-iptables
 documentation.list
 **/*.so*
+moc_*.cpp
