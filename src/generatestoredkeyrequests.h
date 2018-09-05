@@ -13,11 +13,11 @@ class GenerateStoredKeyRequests : public QObject {
     Q_OBJECT
 
 public:
-    Sailfish::Crypto::Key createStoredKey(
+    static Sailfish::Crypto::Key createStoredKey(
         const QString& keyName,
         const QString& collectionName,
         const QString& dbName,
         const Sailfish::Crypto::CryptoManager::Algorithm algorithm,
         const Sailfish::Crypto::CryptoManager::Operations operations,
-        const std::size_t keyLength) const;
+        const std::size_t keyLength);
 };

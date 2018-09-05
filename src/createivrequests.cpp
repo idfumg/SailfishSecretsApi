@@ -10,7 +10,7 @@ using namespace Sailfish::Crypto;
 QByteArray CreateIVRequests::createIV(
     const Sailfish::Crypto::CryptoManager::Algorithm algorithm,
     const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
-    const std::size_t keyLength) const
+    const std::size_t keyLength)
 {
     qDebug() << Q_FUNC_INFO;
 

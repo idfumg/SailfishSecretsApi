@@ -10,7 +10,7 @@
 using namespace Sailfish::Crypto;
 
 QByteArray SignVerifyRequests::sign(const Sailfish::Crypto::Key& key,
-                                    const QByteArray& data) const
+                                    const QByteArray& data)
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -34,7 +34,7 @@ QByteArray SignVerifyRequests::sign(const Sailfish::Crypto::Key& key,
 
 bool SignVerifyRequests::verify(const Sailfish::Crypto::Key& key,
                                 const QByteArray& data,
-                                const QByteArray& signature) const
+                                const QByteArray& signature)
 {
     qDebug() << Q_FUNC_INFO;
 

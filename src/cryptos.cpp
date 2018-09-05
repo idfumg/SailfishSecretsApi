@@ -24,7 +24,7 @@ namespace {
 
         const QByteArray plainText = "The quick brown fox jumps over the lazy dog";
 
-        const auto rsaKey = GenerateStoredKeyRequests().createStoredKey(
+        const auto rsaKey = GenerateStoredKeyRequests::createStoredKey(
             "MyRsaKey",
             "ExampleCollection",
             "org.sailfishos.secrets.plugin.storage.sqlite",
@@ -32,12 +32,12 @@ namespace {
             CryptoManager::OperationSign | CryptoManager::OperationVerify,
             2048);
 
-        QByteArray signature = SignVerifyRequests().sign(rsaKey, plainText);
-        bool verified = SignVerifyRequests().verify(rsaKey, plainText, signature);
+        QByteArray signature = SignVerifyRequests::sign(rsaKey, plainText);
+        bool verified = SignVerifyRequests::verify(rsaKey, plainText, signature);
         Q_ASSERT(verified == true);
 
         signature[0] = '\0'; // corrupt the signature
-        verified = SignVerifyRequests().verify(rsaKey, plainText, signature);
+        verified = SignVerifyRequests::verify(rsaKey, plainText, signature);
         Q_ASSERT(verified == false);
     }
 
@@ -51,7 +51,7 @@ namespace {
         const auto padding = CryptoManager::EncryptionPaddingNone;
 
         const auto iv =
-            CreateIVRequests().createIV(
+            CreateIVRequests::createIV(
                 key.algorithm(),
                 blockMode,
                 key.size());
@@ -90,7 +90,7 @@ namespace {
         const auto padding = CryptoManager::EncryptionPaddingNone;
 
         const auto iv =
-            CreateIVRequests().createIV(
+            CreateIVRequests::createIV(
                 key.algorithm(),
                 blockMode,
                 key.size());
@@ -120,7 +120,7 @@ namespace {
 
         const QByteArray plainText = "The quick brown fox jumps over the lazy dog";
 
-        const auto aesKey = GenerateStoredKeyRequests().createStoredKey(
+        const auto aesKey = GenerateStoredKeyRequests::createStoredKey(
             "MyAesKey",
             "ExampleCollection",
             "org.sailfishos.secrets.plugin.storage.sqlite",
@@ -131,7 +131,7 @@ namespace {
         EncryptAndDecryptWithAuth(aesKey, plainText, QByteArray("my_password"));
         EncryptAndDecryptWithoutAuth(aesKey, plainText);
 
-        const auto gostKey = GenerateStoredKeyRequests().createStoredKey(
+        const auto gostKey = GenerateStoredKeyRequests::createStoredKey(
             "MyGostKey",
             "ExampleCollection",
             "org.sailfishos.secrets.plugin.storage.sqlite",
@@ -149,7 +149,7 @@ namespace {
 
         const QByteArray plainText = "The quick brown fox jumps over the lazy dog";
 
-        const auto aesKey = GenerateStoredKeyRequests().createStoredKey(
+        const auto aesKey = GenerateStoredKeyRequests::createStoredKey(
             "MyAesKeyForCipher",
             "ExampleCollection",
             "org.sailfishos.secrets.plugin.storage.sqlite",
@@ -158,7 +158,7 @@ namespace {
             256);
 
         const auto iv =
-            CreateIVRequests().createIV(
+            CreateIVRequests::createIV(
                 aesKey.algorithm(),
                 CryptoManager::BlockModeCbc,
                 aesKey.size());
@@ -166,14 +166,14 @@ namespace {
         const auto blockMode = Sailfish::Crypto::CryptoManager::BlockModeCbc;
 
         const QByteArray cipherText =
-            CipherDecipherRequests().cipherText(
+            CipherDecipherRequests::cipherText(
                 aesKey,
                 iv,
                 plainText,
                 blockMode);
 
         const QByteArray decipheredText =
-            CipherDecipherRequests().decipherText(
+            CipherDecipherRequests::decipherText(
                 aesKey,
                 iv,
                 cipherText,
@@ -188,7 +188,7 @@ namespace {
         const QString collectionName = "ExampleCollection";
         const QString storageName = "org.sailfishos.secrets.plugin.storage.sqlite";
 
-        const auto aesKey = GenerateStoredKeyRequests().createStoredKey(
+        const auto aesKey = GenerateStoredKeyRequests::createStoredKey(
             keyName,
             collectionName,
             storageName,

@@ -24,7 +24,7 @@ Sailfish::Crypto::Key GenerateStoredKeyRequests::createStoredKey(
     const QString& dbName,
     const Sailfish::Crypto::CryptoManager::Algorithm algorithm,
     const Sailfish::Crypto::CryptoManager::Operations operations,
-    const std::size_t keyLength) const
+    const std::size_t keyLength)
 {
     qDebug() << Q_FUNC_INFO;
 
