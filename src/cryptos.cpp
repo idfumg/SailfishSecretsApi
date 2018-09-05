@@ -164,20 +164,26 @@ namespace {
                 aesKey.size());
 
         const auto blockMode = Sailfish::Crypto::CryptoManager::BlockModeCbc;
+        const auto padding = CryptoManager::EncryptionPaddingNone;
+        const auto signaturePadding = CryptoManager::SignaturePaddingNone;
 
         const QByteArray cipherText =
             CipherDecipherRequests::cipherText(
                 aesKey,
                 iv,
                 plainText,
-                blockMode);
+                blockMode,
+                padding,
+                signaturePadding);
 
         const QByteArray decipheredText =
             CipherDecipherRequests::decipherText(
                 aesKey,
                 iv,
                 cipherText,
-                blockMode);
+                blockMode,
+                padding,
+                signaturePadding);
 
         Q_ASSERT(plainText == decipheredText);
     }

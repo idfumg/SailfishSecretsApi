@@ -11,7 +11,9 @@ QByteArray CipherDecipherRequests::cipherText(
     const Sailfish::Crypto::Key& key,
     const QByteArray& iv,
     const QByteArray& plainText,
-    const Sailfish::Crypto::CryptoManager::BlockMode blockMode)
+    const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
+    const Sailfish::Crypto::CryptoManager::EncryptionPadding padding,
+    const Sailfish::Crypto::CryptoManager::SignaturePadding signaturePadding)
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -23,6 +25,8 @@ QByteArray CipherDecipherRequests::cipherText(
     request.setCipherMode(CipherRequest::InitializeCipher);
     request.setKey(key);
     request.setBlockMode(blockMode);
+    request.setEncryptionPadding(padding);
+    request.setSignaturePadding(signaturePadding);
     request.setOperation(Sailfish::Crypto::CryptoManager::OperationEncrypt);
     request.setInitializationVector(iv);
     request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
@@ -39,28 +43,34 @@ QByteArray CipherDecipherRequests::cipherText(
         request.setData(QByteArray(1, plainText[i]));
         request.startRequest();
         request.waitForFinished();
+
         if (not IsRequestWasSuccessful(&request)) {
             return {};
         }
+
         ciphertext.append(request.generatedData());
     }
 
     request.setCipherMode(CipherRequest::FinalizeCipher);
     request.startRequest();
     request.waitForFinished();
+
     if (not IsRequestWasSuccessful(&request)) {
         return {};
     }
+
     ciphertext.append(request.generatedData());
 
     return ciphertext;
 }
-//#warning stream cipher with auth code
+
 QByteArray CipherDecipherRequests::decipherText(
     const Sailfish::Crypto::Key& key,
     const QByteArray& iv,
     const QByteArray& ciphertext,
-    const Sailfish::Crypto::CryptoManager::BlockMode blockMode)
+    const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
+    const Sailfish::Crypto::CryptoManager::EncryptionPadding padding,
+    const Sailfish::Crypto::CryptoManager::SignaturePadding signaturePadding)
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -72,6 +82,8 @@ QByteArray CipherDecipherRequests::decipherText(
     request.setCipherMode(CipherRequest::InitializeCipher);
     request.setKey(key);
     request.setBlockMode(blockMode);
+    request.setEncryptionPadding(padding);
+    request.setSignaturePadding(signaturePadding);
     request.setOperation(Sailfish::Crypto::CryptoManager::OperationDecrypt);
     request.setInitializationVector(iv);
     request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
@@ -88,18 +100,22 @@ QByteArray CipherDecipherRequests::decipherText(
         request.setData(QByteArray(1, ciphertext[i]));
         request.startRequest();
         request.waitForFinished();
+
         if (not IsRequestWasSuccessful(&request)) {
             return {};
         }
+
         plaintext.append(request.generatedData());
     }
 
     request.setCipherMode(CipherRequest::FinalizeCipher);
     request.startRequest();
     request.waitForFinished();
+
     if (not IsRequestWasSuccessful(&request)) {
         return {};
     }
+
     plaintext.append(request.generatedData());
 
     return plaintext;
