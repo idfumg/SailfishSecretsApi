@@ -1,23 +1,20 @@
 #include "requests.h"
+#include "utils.h"
 
-#include <Sailfish/Crypto/cryptomanager.h>
-#include <Sailfish/Crypto/generaterandomdatarequest.h>
-#include <Sailfish/Crypto/seedrandomdatageneratorrequest.h>
-#include <Sailfish/Crypto/generatestoredkeyrequest.h>
-#include <Sailfish/Crypto/generateinitializationvectorrequest.h>
-#include <Sailfish/Crypto/encryptrequest.h>
-#include <Sailfish/Crypto/decryptrequest.h>
-#include <Sailfish/Crypto/storedkeyrequest.h>
-#include <Sailfish/Crypto/deletestoredkeyrequest.h>
 #include <Sailfish/Crypto/cipherrequest.h>
-#include <Sailfish/Crypto/signrequest.h>
-#include <Sailfish/Crypto/verifyrequest.h>
+#include <Sailfish/Crypto/cryptomanager.h>
+#include <Sailfish/Crypto/deletestoredkeyrequest.h>
+#include <Sailfish/Crypto/generateinitializationvectorrequest.h>
+#include <Sailfish/Crypto/generaterandomdatarequest.h>
+#include <Sailfish/Crypto/generatestoredkeyrequest.h>
+#include <Sailfish/Crypto/seedrandomdatageneratorrequest.h>
+#include <Sailfish/Crypto/storedkeyrequest.h>
 
-#include <Sailfish/Secrets/secretmanager.h>
+#include <Sailfish/Secrets/collectionnamesrequest.h>
 #include <Sailfish/Secrets/createcollectionrequest.h>
 #include <Sailfish/Secrets/deletecollectionrequest.h>
-#include <Sailfish/Secrets/collectionnamesrequest.h>
 #include <Sailfish/Secrets/plugininforequest.h>
+#include <Sailfish/Secrets/secretmanager.h>
 
 #include <QtCore/QDebug>
 
@@ -30,38 +27,6 @@ namespace {
     const QString COLLECTION_NAME = QLatin1String("ExampleCollection");
     const QString DB_NAME = QStringLiteral("org.sailfishos.secrets.plugin.storage.sqlite");
     const Key::Identifier keyIdentifier(KEY_NAME, COLLECTION_NAME, DB_NAME);
-
-    bool IsRequestWasSuccessful(Sailfish::Crypto::Request* request)
-    {
-        if (request->status() != Sailfish::Crypto::Request::Finished or
-            request->result().code() != Sailfish::Crypto::Result::Succeeded)
-        {
-            qDebug() << "\n\n";
-            qDebug() << request->status();
-            qDebug() << request->result().code();
-            qDebug() << request->result().errorMessage();
-        }
-
-        return
-            request->status() == Sailfish::Crypto::Request::Finished and
-            request->result().code() == Sailfish::Crypto::Result::Succeeded;
-    }
-
-    bool IsRequestWasSuccessful(Sailfish::Secrets::Request* request)
-    {
-        if (request->status() != Sailfish::Secrets::Request::Finished or
-            request->result().code() != Sailfish::Secrets::Result::Succeeded)
-        {
-            qDebug() << "\n\n";
-            qDebug() << request->status();
-            qDebug() << request->result().code();
-            qDebug() << request->result().errorMessage();
-        }
-
-        return
-            request->status() == Sailfish::Secrets::Request::Finished and
-            request->result().code() == Sailfish::Secrets::Result::Succeeded;
-    }
 
     bool IsCollectionExists(const QStringList& collectionNames,
                             const QString& name)
@@ -76,16 +41,23 @@ namespace {
 
 } // anonymous namespace
 
-void Requests::getRandomData() const
+/*
+  Request for getting random data.
+  In this function we setup request, give it a random data length and start it.
+  We trying to work asynchronously, so we working though callback mechanism.
+ */
+void Requests::getRandomData()
 {
     qDebug() << Q_FUNC_INFO;
+
+    const std::size_t RANDOM_DATA_LENGTH = 128;
 
     CryptoManager manager;
     GenerateRandomDataRequest* const request = new GenerateRandomDataRequest;
     request->setManager(&manager);
     request->setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
     request->setCsprngEngineName(GenerateRandomDataRequest::DefaultCsprngEngineName);
-    request->setNumberBytes(128);
+    request->setNumberBytes(RANDOM_DATA_LENGTH);
     request->startRequest();
     connect(request, &GenerateRandomDataRequest::statusChanged, [request] () {
         if (IsRequestWasSuccessful(request)) {
@@ -96,7 +68,7 @@ void Requests::getRandomData() const
     });
 }
 
-void Requests::seedRandomGenerator() const
+void Requests::seedRandomGenerator()
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -117,7 +89,7 @@ void Requests::seedRandomGenerator() const
     });
 }
 
-bool Requests::isCollectionExists() const
+bool Requests::isCollectionExists()
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -137,7 +109,7 @@ bool Requests::isCollectionExists() const
     return false;
 }
 
-bool Requests::deleteCollection() const
+bool Requests::deleteCollection()
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -153,15 +125,13 @@ bool Requests::deleteCollection() const
     return IsRequestWasSuccessful(request);
 }
 
-bool Requests::createCollection() const
+bool Requests::createCollection()
 {
     qDebug() << Q_FUNC_INFO;
 
     SecretManager manager;
     CreateCollectionRequest* const request = new CreateCollectionRequest;
     request->setManager(&manager);
-    // request->setAccessControlMode(Sailfish::Secrets::SecretManager::OwnerOnlyMode);
-    // request->setAuthenticationPluginName(SecretManager::DefaultAuthenticationPluginName);
     request->setEncryptionPluginName("org.sailfishos.secrets.plugin.encryption.openssl");
     request->setStoragePluginName(DB_NAME);
     request->setCollectionName(COLLECTION_NAME);
@@ -172,166 +142,7 @@ bool Requests::createCollection() const
     return IsRequestWasSuccessful(request);
 }
 
-Sailfish::Crypto::Key Requests::createTemplateKey() const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    Key keyTemplate;
-
-    keyTemplate.setAlgorithm(CryptoManager::AlgorithmAes);
-    keyTemplate.setSize(256);
-    keyTemplate.setOrigin(Key::OriginDevice);
-    keyTemplate.setOperations(
-        CryptoManager::OperationEncrypt |
-        CryptoManager::OperationDecrypt |
-        CryptoManager::OperationSign |
-        CryptoManager::OperationVerify);
-    keyTemplate.setIdentifier(keyIdentifier);
-    keyTemplate.setComponentConstraints(
-        Sailfish::Crypto::Key::MetaData |
-        Sailfish::Crypto::Key::PublicKeyData |
-        Sailfish::Crypto::Key::PrivateKeyData);
-
-    return keyTemplate;
-}
-
-Sailfish::Crypto::Key Requests::createTemplateKeyGOST() const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    Key keyTemplate;
-
-    keyTemplate.setAlgorithm(CryptoManager::AlgorithmGost);
-    keyTemplate.setSize(256);
-    keyTemplate.setOrigin(Key::OriginDevice);
-    keyTemplate.setOperations(
-        CryptoManager::OperationEncrypt |
-        CryptoManager::OperationDecrypt);
-    keyTemplate.setIdentifier(keyIdentifier);
-    keyTemplate.setComponentConstraints(
-        Sailfish::Crypto::Key::MetaData |
-        Sailfish::Crypto::Key::PublicKeyData);
-
-    return keyTemplate;
-}
-
-Sailfish::Crypto::Key Requests::createStoredKey(const Sailfish::Crypto::Key& keyTemplate) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    GenerateStoredKeyRequest request;
-    request.setManager(&manager);
-    request.setKeyTemplate(keyTemplate);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        qDebug() << "Error when generating key";
-        throw std::runtime_error("Error when generating key");
-    }
-
-    return request.generatedKeyReference();
-}
-
-QByteArray Requests::createIV(const Sailfish::Crypto::Key& key) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    GenerateInitializationVectorRequest request;
-    request.setManager(&manager);
-    request.setAlgorithm(key.algorithm());
-    request.setKeySize(key.size());
-    request.setBlockMode(CryptoManager::BlockModeCbc);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        qDebug() << "Error when generating IV";
-        throw std::runtime_error("Error when generating IV");
-    }
-
-    return request.generatedInitializationVector();
-}
-
-QByteArray Requests::createIVForAuth(const Sailfish::Crypto::Key& key) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    GenerateInitializationVectorRequest request;
-    request.setManager(&manager);
-    request.setAlgorithm(key.algorithm());
-    request.setKeySize(key.size());
-    request.setBlockMode(CryptoManager::BlockModeGcm);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        qDebug() << "Error when generating IV";
-        throw std::runtime_error("Error when generating IV");
-    }
-
-    return request.generatedInitializationVector();
-}
-
-QByteArray Requests::encrypt(const Sailfish::Crypto::Key& key,
-                             const QByteArray& iv,
-                             const QByteArray& plainText) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    EncryptRequest request;
-    request.setManager(&manager);
-    request.setData(plainText);
-    request.setKey(key);
-    request.setInitializationVector(iv);
-    request.setBlockMode(CryptoManager::BlockModeCbc);
-    request.setPadding(CryptoManager::EncryptionPaddingNone);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        qDebug() << "Error when encrypt";
-        throw std::runtime_error("Error when encrypt");
-    }
-
-    return request.ciphertext();
-}
-
-QByteArray Requests::decrypt(const Sailfish::Crypto::Key& key,
-                             const QByteArray& iv,
-                             const QByteArray& cipherText) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    DecryptRequest request;
-    request.setManager(&manager);
-    request.setData(cipherText);
-    request.setKey(key);
-    request.setInitializationVector(iv);
-    request.setBlockMode(CryptoManager::BlockModeCbc);
-    request.setPadding(CryptoManager::EncryptionPaddingNone);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        qDebug() << "Error when decrypt";
-        throw std::runtime_error("Error when decrypt");
-    }
-
-    return request.plaintext();
-}
-
-Sailfish::Crypto::Key Requests::getStoredKey() const
+Sailfish::Crypto::Key Requests::getStoredKey()
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -351,7 +162,7 @@ Sailfish::Crypto::Key Requests::getStoredKey() const
     return request.storedKey();
 }
 
-void Requests::pluginInfo() const
+void Requests::pluginInfo()
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -376,259 +187,19 @@ void Requests::pluginInfo() const
     }
 }
 
-bool Requests::deleteStoredKey() const
+bool Requests::deleteStoredKey(const QString& keyName,
+                               const QString& collectionName,
+                               const QString& dbName)
 {
     qDebug() << Q_FUNC_INFO;
 
     CryptoManager manager;
     DeleteStoredKeyRequest* const request = new DeleteStoredKeyRequest;
-    request->setIdentifier(keyIdentifier);
+    request->setIdentifier(Key::Identifier(keyName, collectionName, dbName));
     request->setManager(&manager);
     request->startRequest();
     request->waitForFinished();
     request->deleteLater();
 
     return IsRequestWasSuccessful(request);
-}
-
-QByteArray Requests::cipherText(const Sailfish::Crypto::Key& key,
-                                const QByteArray& iv,
-                                const QByteArray& plainText) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    QByteArray ciphertext;
-
-    CryptoManager manager;
-    CipherRequest request;
-    request.setManager(&manager);
-    request.setCipherMode(CipherRequest::InitializeCipher);
-    request.setKey(key);
-    request.setBlockMode(Sailfish::Crypto::CryptoManager::BlockModeCbc);
-    request.setOperation(Sailfish::Crypto::CryptoManager::OperationEncrypt);
-    request.setInitializationVector(iv);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        return {};
-    }
-
-    // Update the cipher session with data to encrypt.
-    for (int i = 0; i < plainText.size(); ++i) {
-        request.setCipherMode(CipherRequest::UpdateCipher);
-        request.setData(QByteArray(1, plainText[i]));
-        request.startRequest();
-        request.waitForFinished();
-        if (not IsRequestWasSuccessful(&request)) {
-            return {};
-        }
-        ciphertext.append(request.generatedData());
-    }
-
-    request.setCipherMode(CipherRequest::FinalizeCipher);
-    request.startRequest();
-    request.waitForFinished();
-    if (not IsRequestWasSuccessful(&request)) {
-        return {};
-    }
-    ciphertext.append(request.generatedData());
-
-    return ciphertext;
-}
-
-QByteArray Requests::decipherText(const Sailfish::Crypto::Key& key,
-                                  const QByteArray& iv,
-                                  const QByteArray& ciphertext) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    QByteArray plaintext;
-
-    CryptoManager manager;
-    CipherRequest request;
-    request.setManager(&manager);
-    request.setCipherMode(CipherRequest::InitializeCipher);
-    request.setKey(key);
-    request.setBlockMode(Sailfish::Crypto::CryptoManager::BlockModeCbc);
-    request.setOperation(Sailfish::Crypto::CryptoManager::OperationDecrypt);
-    request.setInitializationVector(iv);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        return {};
-    }
-
-    // Update the cipher session with data to encrypt.
-    for (int i = 0; i < ciphertext.size(); ++i) {
-        request.setCipherMode(CipherRequest::UpdateCipher);
-        request.setData(QByteArray(1, ciphertext[i]));
-        request.startRequest();
-        request.waitForFinished();
-        if (not IsRequestWasSuccessful(&request)) {
-            return {};
-        }
-        plaintext.append(request.generatedData());
-    }
-
-    request.setCipherMode(CipherRequest::FinalizeCipher);
-    request.startRequest();
-    request.waitForFinished();
-    if (not IsRequestWasSuccessful(&request)) {
-        return {};
-    }
-    plaintext.append(request.generatedData());
-
-    return plaintext;
-}
-
-QByteArray Requests::sign(const Sailfish::Crypto::Key& key,
-                          const QByteArray& data) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    SignRequest request;
-    request.setManager(&manager);
-    request.setKey(key);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.setPadding(Sailfish::Crypto::CryptoManager::SignaturePaddingNone);
-    request.setDigestFunction(CryptoManager::DigestSha256);
-    request.setData(data);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        return {};
-    }
-
-    return request.signature();
-}
-
-bool Requests::verify(const Sailfish::Crypto::Key& key,
-                      const QByteArray& data,
-                      const QByteArray& signature) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    VerifyRequest request;
-    request.setManager(&manager);
-    request.setKey(key);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.setPadding(Sailfish::Crypto::CryptoManager::SignaturePaddingNone);
-    request.setDigestFunction(CryptoManager::DigestSha256);
-    request.setSignature(signature);
-    request.setData(data);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        return {};
-    }
-
-    return request.verificationStatus() == CryptoManager::VerificationSucceeded;
-}
-
-Sailfish::Crypto::Key Requests::createStoredKeyRSA() const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    const std::size_t KEY_LENGTH = 1024;
-
-    RsaKeyPairGenerationParameters keyPairGenParams;
-    keyPairGenParams.setModulusLength(KEY_LENGTH);
-
-    Key keyTemplate;
-
-    keyTemplate.setAlgorithm(CryptoManager::AlgorithmRsa);
-    keyTemplate.setSize(KEY_LENGTH);
-    keyTemplate.setOrigin(Key::OriginDevice);
-    keyTemplate.setOperations(
-        CryptoManager::OperationSign |
-        CryptoManager::OperationVerify);
-    keyTemplate.setIdentifier(keyIdentifier);
-    keyTemplate.setComponentConstraints(
-        Sailfish::Crypto::Key::MetaData |
-        Sailfish::Crypto::Key::PublicKeyData |
-        Sailfish::Crypto::Key::PrivateKeyData);
-
-    CryptoManager manager;
-    GenerateStoredKeyRequest request;
-    request.setManager(&manager);
-    request.setKeyTemplate(keyTemplate);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.setKeyPairGenerationParameters(keyPairGenParams);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        qDebug() << "Error when generating key";
-        throw std::runtime_error("Error when generating key");
-    }
-
-    return request.generatedKeyReference();
-}
-
-QByteArray Requests::encryptWithAuth(const Sailfish::Crypto::Key& key,
-                                     const QByteArray& iv,
-                                     const QByteArray& plainText,
-                                     const QByteArray& authCode,
-                                     QByteArray& authTag) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    EncryptRequest request;
-    request.setManager(&manager);
-    request.setData(plainText);
-    request.setKey(key);
-    request.setInitializationVector(iv);
-    request.setBlockMode(CryptoManager::BlockModeGcm);
-    request.setPadding(CryptoManager::EncryptionPaddingNone);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.setAuthenticationData(authCode);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        qDebug() << "Error when encrypt";
-        throw std::runtime_error("Error when encrypt");
-    }
-
-    authTag = request.authenticationTag();
-    return request.ciphertext();
-}
-
-QByteArray Requests::decryptWithAuth(const Sailfish::Crypto::Key& key,
-                                     const QByteArray& iv,
-                                     const QByteArray& cipherText,
-                                     const QByteArray& authCode,
-                                     const QByteArray& authTag) const
-{
-    qDebug() << Q_FUNC_INFO;
-
-    CryptoManager manager;
-    DecryptRequest request;
-    request.setManager(&manager);
-    request.setData(cipherText);
-    request.setKey(key);
-    request.setInitializationVector(iv);
-    request.setBlockMode(CryptoManager::BlockModeGcm);
-    request.setPadding(CryptoManager::EncryptionPaddingNone);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.setAuthenticationData(authCode);
-    request.setAuthenticationTag(authTag);
-    request.startRequest();
-    request.waitForFinished();
-
-    if (not IsRequestWasSuccessful(&request)) {
-        qDebug() << "Error when decrypt";
-        throw std::runtime_error("Error when decrypt");
-    }
-
-    return request.plaintext();
 }
