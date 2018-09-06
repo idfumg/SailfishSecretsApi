@@ -108,7 +108,7 @@ namespace {
         const auto blockMode = CryptoManager::BlockModeCbc;
         const auto padding = CryptoManager::EncryptionPaddingNone;
 
-        const auto iv =
+        const QByteArray iv =
             CreateIVRequests::createIV(
                 key.algorithm(),
                 blockMode,
@@ -122,9 +122,18 @@ namespace {
                 blockMode,
                 padding);
 
+        /*
+          If you restart program, you can decrypt by a key/collection/db name.
+          Because the key data stored in the database.
+         */
+        const Sailfish::Crypto::Key theSameKey(
+            key.name(),
+            key.collectionName(),
+            key.storagePluginName());
+
         const QByteArray decrypted =
             EncryptDecryptRequests().decrypt(
-                key,
+                theSameKey,
                 iv,
                 encrypted,
                 blockMode,
@@ -134,7 +143,7 @@ namespace {
     }
 
     /*
-      It function prepare data to use AES and GOST encryption and decryption.
+      It function prepare data to use AES encryption and decryption.
      */
     void EncryptAndDecrypt()
     {
