@@ -152,17 +152,6 @@ namespace {
 
         EncryptAndDecryptWithAuth(aesKey, plainText, QByteArray("my_password"));
         EncryptAndDecryptWithoutAuth(aesKey, plainText);
-
-        const auto gostKey = GenerateStoredKeyRequests::createStoredKey(
-            "MyGostKey",
-            "ExampleCollection",
-            "org.sailfishos.secrets.plugin.storage.sqlite",
-            CryptoManager::AlgorithmAes,
-            CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
-            256);
-
-        EncryptAndDecryptWithAuth(gostKey, plainText, QByteArray("my_password"));
-        EncryptAndDecryptWithoutAuth(gostKey, plainText);
     }
 
     /*
