@@ -157,7 +157,7 @@ namespace {
             "org.sailfishos.secrets.plugin.storage.sqlite",
             CryptoManager::AlgorithmAes,
             CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
-            256);
+            256 /*key length: 128, 192, 256 for AES*/);
 
         EncryptAndDecryptWithAuth(aesKey, plainText, QByteArray("my_password"));
         EncryptAndDecryptWithoutAuth(aesKey, plainText);
