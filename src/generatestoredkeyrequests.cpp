@@ -28,6 +28,19 @@ Sailfish::Crypto::Key GenerateStoredKeyRequests::createStoredKey(
 {
     qDebug() << Q_FUNC_INFO;
 
+    /*
+      Key derivation need for improve key security.
+      Its used for iterable several times getting digest of the key using some salt
+      which defense from dictionary attacks.
+    */
+    Sailfish::Crypto::KeyDerivationParameters kdp;
+    kdp.setKeyDerivationFunction(Sailfish::Crypto::CryptoManager::KdfPkcs5Pbkdf2);
+    kdp.setKeyDerivationMac(Sailfish::Crypto::CryptoManager::MacHmac);
+    kdp.setKeyDerivationDigestFunction(Sailfish::Crypto::CryptoManager::DigestSha512);
+    kdp.setIterations(16384);
+    kdp.setSalt("my random salt");
+    kdp.setOutputKeySize(keyLength);
+
     Key key;
     key.setAlgorithm(algorithm);
     key.setSize(keyLength);
@@ -47,6 +60,7 @@ Sailfish::Crypto::Key GenerateStoredKeyRequests::createStoredKey(
     if (algorithm == Sailfish::Crypto::CryptoManager::AlgorithmRsa) {
         request.setKeyPairGenerationParameters(CreateGenParams(key.size()));
     }
+    request.setKeyDerivationParameters(kdp);
     request.startRequest();
     request.waitForFinished();
 
