@@ -12,6 +12,7 @@ public:
         const QByteArray& plainText,
         const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
         const Sailfish::Crypto::CryptoManager::EncryptionPadding padding,
+        const QString &pluginName,
         const QByteArray& authCode = "",
         QByteArray* authTag = nullptr) const;
 
@@ -21,6 +22,7 @@ public:
         const QByteArray& cipherText,
         const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
         const Sailfish::Crypto::CryptoManager::EncryptionPadding padding,
+        const QString &pluginName,
         const QByteArray& authCode = "",
         QByteArray* authTag = nullptr) const;
 };

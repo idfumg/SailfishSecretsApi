@@ -15,6 +15,7 @@ QByteArray EncryptDecryptRequests::encrypt(
     const QByteArray& plainText,
     const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
     const Sailfish::Crypto::CryptoManager::EncryptionPadding padding,
+    const QString &pluginName,
     const QByteArray& authCode,
     QByteArray* authTag) const
 {
@@ -32,7 +33,7 @@ QByteArray EncryptDecryptRequests::encrypt(
     request.setInitializationVector(iv);
     request.setBlockMode(blockMode);
     request.setPadding(padding);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
+    request.setCryptoPluginName(pluginName);
     if (not authCode.isEmpty()) {
         request.setAuthenticationData(authCode);
     }
@@ -57,6 +58,7 @@ QByteArray EncryptDecryptRequests::decrypt(
     const QByteArray& cipherText,
     const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
     const Sailfish::Crypto::CryptoManager::EncryptionPadding padding,
+    const QString &pluginName,
     const QByteArray& authCode,
     QByteArray* authTag) const
 {
@@ -70,7 +72,7 @@ QByteArray EncryptDecryptRequests::decrypt(
     request.setInitializationVector(iv);
     request.setBlockMode(blockMode);
     request.setPadding(padding);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
+    request.setCryptoPluginName(pluginName);
     if (not authCode.isEmpty()) {
         request.setAuthenticationData(authCode);
     }

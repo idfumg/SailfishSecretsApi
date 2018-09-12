@@ -80,6 +80,7 @@ namespace {
                 plainText,
                 blockMode,
                 padding,
+                CryptoManager::DefaultCryptoPluginName,
                 authCode,
                 &authTag);
 
@@ -90,6 +91,7 @@ namespace {
                 encrypted,
                 blockMode,
                 padding,
+                CryptoManager::DefaultCryptoPluginName,
                 authCode,
                 &authTag);
 
@@ -120,7 +122,8 @@ namespace {
                 iv,
                 plainText,
                 blockMode,
-                padding);
+                padding,
+                CryptoManager::DefaultCryptoPluginName);
 
         /*
           If you restart program, you can decrypt by a key/collection/db name.
@@ -137,7 +140,51 @@ namespace {
                 iv,
                 encrypted,
                 blockMode,
-                padding);
+                padding,
+                CryptoManager::DefaultCryptoPluginName);
+
+        Q_ASSERT(decrypted == plainText);
+    }
+
+    void EncryptAndDecryptWithoutAuthGost(const Sailfish::Crypto::Key&,
+                                          const QByteArray& plainText)
+    {
+        qDebug() << Q_FUNC_INFO;
+
+        const auto key = GenerateStoredKeyRequests::createStoredKey(
+            "MyGostKey",
+            "ExampleCollection",
+            "org.sailfishos.secrets.plugin.storage.sqlite",
+            CryptoManager::AlgorithmGost,
+            CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
+            256 /*key length: 128, 192, 256 for AES*/);
+
+        const auto blockMode = CryptoManager::BlockModeCbc;
+        const auto padding = CryptoManager::EncryptionPaddingNone;
+
+        // const QByteArray iv =
+        //     CreateIVRequests::createIV(
+        //         key.algorithm(),
+        //         blockMode,
+        //         key.size());
+
+        const QByteArray encrypted =
+            EncryptDecryptRequests().encrypt(
+                key,
+                QByteArray(),
+                plainText,
+                blockMode,
+                padding,
+                "org.sailfishos.plugin.encryption.gost");
+
+        const QByteArray decrypted =
+            EncryptDecryptRequests().decrypt(
+                key,
+                QByteArray(),
+                encrypted,
+                blockMode,
+                padding,
+                "org.sailfishos.plugin.encryption.gost");
 
         Q_ASSERT(decrypted == plainText);
     }
@@ -159,8 +206,9 @@ namespace {
             CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
             256 /*key length: 128, 192, 256 for AES*/);
 
-        EncryptAndDecryptWithAuth(aesKey, plainText, QByteArray("my_password"));
-        EncryptAndDecryptWithoutAuth(aesKey, plainText);
+        // EncryptAndDecryptWithAuth(aesKey, plainText, QByteArray("my_password"));
+        // EncryptAndDecryptWithoutAuth(aesKey, plainText);
+        EncryptAndDecryptWithoutAuthGost(aesKey, plainText);
     }
 
     /*
@@ -271,14 +319,14 @@ int main(int argc, char **argv)
       It uses /dev/urandom data generator, but you can specified or define yours.
       It can be used for seeding PRNG in future for generating more secure keys.
      */
-    Requests::getRandomData();
+    // Requests::getRandomData();
 
     /*
       This function seed PRNG with some data which your got from lastly.
       For testing purposes it sends some default values, but in real application your
       must specify true random data for real security.
      */
-    Requests::seedRandomGenerator();
+    // Requests::seedRandomGenerator();
 
     if (Requests::isCollectionExists()) {
         qDebug() << "Collection exists\n";
@@ -291,10 +339,10 @@ int main(int argc, char **argv)
     if (Requests::createCollection()) {
         qDebug() << "Create collection was successful\n";
 
-        CheckSignAndVerify();
+        // CheckSignAndVerify();
         EncryptAndDecrypt();
-        CipherAndDecipher();
-        DeleteStoredKey();
+        // CipherAndDecipher();
+        // DeleteStoredKey();
     }
 
     return app.exec();
