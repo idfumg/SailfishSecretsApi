@@ -10,5 +10,6 @@ public:
     static QByteArray createIV(
         const Sailfish::Crypto::CryptoManager::Algorithm algorithm,
         const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
-        const std::size_t keyLength);
+        const std::size_t keyLength,
+        const QString& pluginName);
 };

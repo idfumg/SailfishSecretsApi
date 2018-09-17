@@ -10,7 +10,8 @@ using namespace Sailfish::Crypto;
 QByteArray CreateIVRequests::createIV(
     const Sailfish::Crypto::CryptoManager::Algorithm algorithm,
     const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
-    const std::size_t keyLength)
+    const std::size_t keyLength,
+    const QString& pluginName)
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -20,7 +21,7 @@ QByteArray CreateIVRequests::createIV(
     request.setAlgorithm(algorithm);
     request.setKeySize(keyLength);
     request.setBlockMode(blockMode);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
+    request.setCryptoPluginName(pluginName);
     request.startRequest();
     request.waitForFinished();
 

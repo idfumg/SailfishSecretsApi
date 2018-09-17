@@ -53,11 +53,11 @@ QByteArray EncryptDecryptRequests::encrypt(
 }
 
 QByteArray EncryptDecryptRequests::decrypt(
-    const Sailfish::Crypto::Key& key,
+    const Key& key,
     const QByteArray& iv,
     const QByteArray& cipherText,
-    const Sailfish::Crypto::CryptoManager::BlockMode blockMode,
-    const Sailfish::Crypto::CryptoManager::EncryptionPadding padding,
+    const CryptoManager::BlockMode blockMode,
+    const CryptoManager::EncryptionPadding padding,
     const QString &pluginName,
     const QByteArray& authCode,
     QByteArray* authTag) const

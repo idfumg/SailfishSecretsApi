@@ -3,7 +3,7 @@ target.path = /usr/bin
 
 QT -= gui
 CONFIG += c++11 link_pkgconfig warn_on debug
-QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic
+QMAKE_CXXFLAGS += -Wall -Wextra -Werror -pedantic -g
 PKGCONFIG += sailfishcrypto sailfishsecrets
 
 SOURCES += cryptos.cpp \
@@ -11,17 +11,19 @@ SOURCES += cryptos.cpp \
     signverifyrequests.cpp \
     encryptdecryptrequests.cpp \
     utils.cpp \
-    generatestoredkeyrequests.cpp \
+    generatekeyrequests.cpp \
     createivrequests.cpp \
-    cipherdecipherrequests.cpp
+    cipherdecipherrequests.cpp \
+    digestrequests.cpp
 
 HEADERS += requests.h \
     requests.h \
     signverifyrequests.h \
     encryptdecryptrequests.h \
     utils.h \
-    generatestoredkeyrequests.h \
+    generatekeyrequests.h \
     createivrequests.h \
-    cipherdecipherrequests.h
+    cipherdecipherrequests.h \
+    digestrequests.h
 
 INSTALLS += target

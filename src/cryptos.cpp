@@ -1,9 +1,10 @@
 #include "requests.h"
 #include "signverifyrequests.h"
 #include "encryptdecryptrequests.h"
-#include "generatestoredkeyrequests.h"
+#include "generatekeyrequests.h"
 #include "createivrequests.h"
 #include "cipherdecipherrequests.h"
+#include "digestrequests.h"
 
 #include <Sailfish/Crypto/cryptomanager.h>
 #include <Sailfish/Crypto/generaterandomdatarequest.h>
@@ -30,13 +31,15 @@ namespace {
 
         const QByteArray plainText = "The quick brown fox jumps over the lazy dog";
 
-        const auto rsaKey = GenerateStoredKeyRequests::createStoredKey(
+        const auto rsaKey = GenerateKeyRequests::createStoredKey(
             "MyRsaKey",
             "ExampleCollection",
             "org.sailfishos.secrets.plugin.storage.sqlite",
             CryptoManager::AlgorithmRsa,
             CryptoManager::OperationSign | CryptoManager::OperationVerify,
-            2048 /*length*/);
+            Sailfish::Crypto::CryptoManager::DigestSha512,
+            2048 /*length*/,
+            CryptoManager::DefaultCryptoPluginName);
 
         QByteArray signature = SignVerifyRequests::sign(rsaKey, plainText);
         bool verified = SignVerifyRequests::verify(rsaKey, plainText, signature);
@@ -62,14 +65,15 @@ namespace {
     {
         qDebug() << Q_FUNC_INFO;
 
-        const auto blockMode = CryptoManager::BlockModeGcm;
-        const auto padding = CryptoManager::EncryptionPaddingNone;
+        constexpr auto blockMode = CryptoManager::BlockModeGcm;
+        constexpr auto padding = CryptoManager::EncryptionPaddingNone;
 
         const auto iv =
             CreateIVRequests::createIV(
                 key.algorithm(),
                 blockMode,
-                key.size());
+                key.size(),
+                CryptoManager::DefaultCryptoPluginName);
 
         QByteArray authTag; // generate by crypto algorithm
 
@@ -107,14 +111,15 @@ namespace {
     {
         qDebug() << Q_FUNC_INFO;
 
-        const auto blockMode = CryptoManager::BlockModeCbc;
-        const auto padding = CryptoManager::EncryptionPaddingNone;
+        constexpr auto blockMode = CryptoManager::BlockModeCbc;
+        constexpr auto padding = CryptoManager::EncryptionPaddingNone;
 
         const QByteArray iv =
             CreateIVRequests::createIV(
                 key.algorithm(),
                 blockMode,
-                key.size());
+                key.size(),
+                CryptoManager::DefaultCryptoPluginName);
 
         const QByteArray encrypted =
             EncryptDecryptRequests().encrypt(
@@ -151,40 +156,51 @@ namespace {
     {
         qDebug() << Q_FUNC_INFO;
 
-        const auto key = GenerateStoredKeyRequests::createStoredKey(
-            "MyGostKey",
-            "ExampleCollection",
-            "org.sailfishos.secrets.plugin.storage.sqlite",
+        constexpr auto blockMode = CryptoManager::BlockModeOfb;
+        constexpr auto padding = CryptoManager::EncryptionPaddingNone;
+        constexpr auto pluginName = "org.sailfishos.plugin.encryption.gost";
+
+        // const auto key = GenerateKeyRequests::createStoredKey(
+        //     "MyGostKey",
+        //     "ExampleCollection",
+        //     "org.sailfishos.secrets.plugin.storage.sqlite",
+        //     CryptoManager::AlgorithmGost,
+        //     CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
+        //     Sailfish::Crypto::CryptoManager::DigestGost_2012_256,
+        //     256,
+        //     pluginName);
+
+        const auto key = GenerateKeyRequests::createKey(
             CryptoManager::AlgorithmGost,
             CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
-            256 /*key length: 128, 192, 256 for AES*/);
+            Sailfish::Crypto::CryptoManager::DigestGost_2012_256,
+            256,
+            pluginName);
 
-        const auto blockMode = CryptoManager::BlockModeCbc;
-        const auto padding = CryptoManager::EncryptionPaddingNone;
-
-        // const QByteArray iv =
-        //     CreateIVRequests::createIV(
-        //         key.algorithm(),
-        //         blockMode,
-        //         key.size());
+        const QByteArray iv =
+            CreateIVRequests::createIV(
+                key.algorithm(),
+                blockMode,
+                key.size(),
+                pluginName);
 
         const QByteArray encrypted =
             EncryptDecryptRequests().encrypt(
                 key,
-                QByteArray(),
+                iv,
                 plainText,
                 blockMode,
                 padding,
-                "org.sailfishos.plugin.encryption.gost");
+                pluginName);
 
         const QByteArray decrypted =
             EncryptDecryptRequests().decrypt(
                 key,
-                QByteArray(),
+                iv,
                 encrypted,
                 blockMode,
                 padding,
-                "org.sailfishos.plugin.encryption.gost");
+                pluginName);
 
         Q_ASSERT(decrypted == plainText);
     }
@@ -198,13 +214,15 @@ namespace {
 
         const QByteArray plainText = "The quick brown fox jumps over the lazy dog";
 
-        const auto aesKey = GenerateStoredKeyRequests::createStoredKey(
+        const auto aesKey = GenerateKeyRequests::createStoredKey(
             "MyAesKey",
             "ExampleCollection",
             "org.sailfishos.secrets.plugin.storage.sqlite",
             CryptoManager::AlgorithmAes,
             CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
-            256 /*key length: 128, 192, 256 for AES*/);
+            Sailfish::Crypto::CryptoManager::DigestSha512,
+            256 /*key length: 128, 192, 256 for AES*/,
+            CryptoManager::DefaultCryptoPluginName);
 
         // EncryptAndDecryptWithAuth(aesKey, plainText, QByteArray("my_password"));
         // EncryptAndDecryptWithoutAuth(aesKey, plainText);
@@ -231,19 +249,22 @@ namespace {
 
         const QByteArray plainText = "The quick brown fox jumps over the lazy dog";
 
-        const auto aesKey = GenerateStoredKeyRequests::createStoredKey(
+        const auto aesKey = GenerateKeyRequests::createStoredKey(
             "MyAesKeyForCipher",
             "ExampleCollection",
             "org.sailfishos.secrets.plugin.storage.sqlite",
             CryptoManager::AlgorithmAes,
             CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
-            256);
+            Sailfish::Crypto::CryptoManager::DigestSha512,
+            256,
+            CryptoManager::DefaultCryptoPluginName);
 
         const auto iv =
             CreateIVRequests::createIV(
                 aesKey.algorithm(),
                 CryptoManager::BlockModeCbc,
-                aesKey.size());
+                aesKey.size(),
+                CryptoManager::DefaultCryptoPluginName);
 
         const auto blockMode = Sailfish::Crypto::CryptoManager::BlockModeCbc;
         const auto padding = CryptoManager::EncryptionPaddingNone;
@@ -279,13 +300,15 @@ namespace {
         const QString collectionName = "ExampleCollection";
         const QString storageName = "org.sailfishos.secrets.plugin.storage.sqlite";
 
-        const auto aesKey = GenerateStoredKeyRequests::createStoredKey(
+        const auto aesKey = GenerateKeyRequests::createStoredKey(
             keyName,
             collectionName,
             storageName,
             CryptoManager::AlgorithmAes,
             CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
-            256);
+            Sailfish::Crypto::CryptoManager::DigestSha512,
+            256,
+            CryptoManager::DefaultCryptoPluginName);
 
         const bool keyDeleted =
             Requests::deleteStoredKey(
@@ -294,6 +317,21 @@ namespace {
                 storageName);
 
         Q_ASSERT(keyDeleted == true);
+    }
+
+    void Digest()
+    {
+        const QByteArray data = "The quick brown fox jumps over the lazy dog";
+        const QString pluginName = "org.sailfishos.plugin.encryption.gost";
+
+        const QByteArray digest =
+            DigestRequests::digest(
+                data,
+                CryptoManager::SignaturePaddingNone,
+                CryptoManager::DigestGost_2012_256,
+                pluginName);
+
+        Q_ASSERT(digest.size() == 32);
     }
 
 } // anonymous namespace
@@ -340,9 +378,10 @@ int main(int argc, char **argv)
         qDebug() << "Create collection was successful\n";
 
         // CheckSignAndVerify();
-        EncryptAndDecrypt();
+        // EncryptAndDecrypt();
         // CipherAndDecipher();
         // DeleteStoredKey();
+        Digest();
     }
 
     return app.exec();
