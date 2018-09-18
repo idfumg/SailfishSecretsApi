@@ -160,17 +160,17 @@ namespace {
         constexpr auto padding = CryptoManager::EncryptionPaddingNone;
         constexpr auto pluginName = "org.sailfishos.plugin.encryption.gost";
 
-        // const auto key = GenerateKeyRequests::createStoredKey(
-        //     "MyGostKey",
-        //     "ExampleCollection",
-        //     "org.sailfishos.secrets.plugin.storage.sqlite",
+        // const auto key = GenerateKeyRequests::createKey(
         //     CryptoManager::AlgorithmGost,
         //     CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
         //     Sailfish::Crypto::CryptoManager::DigestGost_2012_256,
         //     256,
         //     pluginName);
 
-        const auto key = GenerateKeyRequests::createKey(
+        const auto key = GenerateKeyRequests::createStoredKey(
+            "MyGostKey",
+            "ExampleCollection",
+            "org.sailfishos.secrets.plugin.storage.sqlite",
             CryptoManager::AlgorithmGost,
             CryptoManager::OperationEncrypt | CryptoManager::OperationDecrypt,
             Sailfish::Crypto::CryptoManager::DigestGost_2012_256,
@@ -193,9 +193,14 @@ namespace {
                 padding,
                 pluginName);
 
+        const Sailfish::Crypto::Key theSameKey(
+            key.name(),
+            key.collectionName(),
+            key.storagePluginName());
+
         const QByteArray decrypted =
             EncryptDecryptRequests().decrypt(
-                key,
+                theSameKey,
                 iv,
                 encrypted,
                 blockMode,
@@ -224,8 +229,8 @@ namespace {
             256 /*key length: 128, 192, 256 for AES*/,
             CryptoManager::DefaultCryptoPluginName);
 
-        // EncryptAndDecryptWithAuth(aesKey, plainText, QByteArray("my_password"));
-        // EncryptAndDecryptWithoutAuth(aesKey, plainText);
+        EncryptAndDecryptWithAuth(aesKey, plainText, QByteArray("my_password"));
+        EncryptAndDecryptWithoutAuth(aesKey, plainText);
         EncryptAndDecryptWithoutAuthGost(aesKey, plainText);
     }
 
@@ -357,14 +362,14 @@ int main(int argc, char **argv)
       It uses /dev/urandom data generator, but you can specified or define yours.
       It can be used for seeding PRNG in future for generating more secure keys.
      */
-    // Requests::getRandomData();
+    Requests::getRandomData();
 
     /*
       This function seed PRNG with some data which your got from lastly.
       For testing purposes it sends some default values, but in real application your
       must specify true random data for real security.
      */
-    // Requests::seedRandomGenerator();
+    Requests::seedRandomGenerator();
 
     if (Requests::isCollectionExists()) {
         qDebug() << "Collection exists\n";
@@ -377,10 +382,10 @@ int main(int argc, char **argv)
     if (Requests::createCollection()) {
         qDebug() << "Create collection was successful\n";
 
-        // CheckSignAndVerify();
-        // EncryptAndDecrypt();
-        // CipherAndDecipher();
-        // DeleteStoredKey();
+        CheckSignAndVerify();
+        EncryptAndDecrypt();
+        CipherAndDecipher();
+        DeleteStoredKey();
         Digest();
     }
 
