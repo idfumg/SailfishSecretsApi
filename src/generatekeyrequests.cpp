@@ -60,7 +60,10 @@ Key GenerateKeyRequests::createStoredKey(
     request.setManager(&manager);
     request.setKeyTemplate(key);
     request.setCryptoPluginName(pluginName);
-    if (algorithm == CryptoManager::AlgorithmRsa) {
+    if ((algorithm == CryptoManager::AlgorithmRsa or
+         algorithm == CryptoManager::AlgorithmGost) and
+        (operations & CryptoManager::OperationSign or
+         operations & CryptoManager::OperationVerify)) {
         request.setKeyPairGenerationParameters(CreateGenParams(key.size()));
     }
     request.setKeyDerivationParameters(kdp);
@@ -112,7 +115,10 @@ Key GenerateKeyRequests::createKey(
     request.setManager(&manager);
     request.setKeyTemplate(key);
     request.setCryptoPluginName(pluginName);
-    if (algorithm == CryptoManager::AlgorithmRsa) {
+    if ((algorithm == CryptoManager::AlgorithmRsa or
+         algorithm == CryptoManager::AlgorithmGost) and
+        (operations & CryptoManager::OperationSign or
+         operations & CryptoManager::OperationVerify)) {
         request.setKeyPairGenerationParameters(CreateGenParams(key.size()));
     }
     request.setKeyDerivationParameters(kdp);

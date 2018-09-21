@@ -10,7 +10,10 @@
 using namespace Sailfish::Crypto;
 
 QByteArray SignVerifyRequests::sign(const Sailfish::Crypto::Key& key,
-                                    const QByteArray& data)
+                                    const QByteArray& data,
+                                    const QString& pluginName,
+                                    const CryptoManager::SignaturePadding padding,
+                                    const CryptoManager::DigestFunction digestFunction)
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -18,9 +21,9 @@ QByteArray SignVerifyRequests::sign(const Sailfish::Crypto::Key& key,
     SignRequest request;
     request.setManager(&manager);
     request.setKey(key);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.setPadding(Sailfish::Crypto::CryptoManager::SignaturePaddingNone);
-    request.setDigestFunction(CryptoManager::DigestSha256);
+    request.setCryptoPluginName(pluginName);
+    request.setPadding(padding);
+    request.setDigestFunction(digestFunction);
     request.setData(data);
     request.startRequest();
     request.waitForFinished();
@@ -34,7 +37,10 @@ QByteArray SignVerifyRequests::sign(const Sailfish::Crypto::Key& key,
 
 bool SignVerifyRequests::verify(const Sailfish::Crypto::Key& key,
                                 const QByteArray& data,
-                                const QByteArray& signature)
+                                const QByteArray& signature,
+                                const QString& pluginName,
+                                const CryptoManager::SignaturePadding padding,
+                                const CryptoManager::DigestFunction digestFunction)
 {
     qDebug() << Q_FUNC_INFO;
 
@@ -42,9 +48,9 @@ bool SignVerifyRequests::verify(const Sailfish::Crypto::Key& key,
     VerifyRequest request;
     request.setManager(&manager);
     request.setKey(key);
-    request.setCryptoPluginName(CryptoManager::DefaultCryptoPluginName);
-    request.setPadding(Sailfish::Crypto::CryptoManager::SignaturePaddingNone);
-    request.setDigestFunction(CryptoManager::DigestSha256);
+    request.setCryptoPluginName(pluginName);
+    request.setPadding(padding);
+    request.setDigestFunction(digestFunction);
     request.setSignature(signature);
     request.setData(data);
     request.startRequest();
