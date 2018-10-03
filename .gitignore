@@ -5,3 +5,4 @@ documentation.list
 **/*.so*
 moc_*.cpp
 src/cryptos
+*.list
